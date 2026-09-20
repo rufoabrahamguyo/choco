@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#FDF6F0" />
+  <title>Team Boy vs Team Girl — Choco's Baby Shower</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="damask" aria-hidden="true"></div>
+
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="corner-flourish" viewBox="0 0 140 140">
+        <g fill="none" stroke="#C9A24B" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke-width="1.15" d="M10 42 C 28 36 40 20 64 16 C 86 12 104 22 128 12" />
+          <path stroke-width="1.15" d="M42 10 C 36 28 20 40 16 64 C 12 86 22 104 12 128" />
+          <path stroke-width="0.9" d="M72 22 C 80 28 92 26 100 18" />
+          <path stroke-width="0.9" d="M22 72 C 28 80 26 92 18 100" />
+          <circle cx="30" cy="30" r="7.5" stroke-width="1.1" />
+          <circle cx="30" cy="30" r="3.6" stroke-width="0.9" />
+          <path stroke-width="0.8" d="M30 22.5 C 33 26 33 28 30 30 C 27 28 27 26 30 22.5 Z" />
+          <path stroke-width="0.75" fill="#C9A24B" fill-opacity="0.28" d="M54 18 C 62 10 74 12 76 20 C 68 23 58 24 54 18 Z" />
+          <path stroke-width="0.75" fill="#C9A24B" fill-opacity="0.28" d="M18 54 C 10 62 12 74 20 76 C 23 68 24 58 18 54 Z" />
+          <path stroke-width="0.75" fill="#C9A24B" fill-opacity="0.22" d="M88 16 C 96 10 106 14 104 22 C 96 22 90 20 88 16 Z" />
+          <path stroke-width="0.75" fill="#C9A24B" fill-opacity="0.22" d="M16 88 C 10 96 14 106 22 104 C 22 96 20 90 16 88 Z" />
+          <circle cx="64" cy="20" r="2.1" fill="#C9A24B" stroke="none" />
+          <circle cx="20" cy="64" r="2.1" fill="#C9A24B" stroke="none" />
+          <circle cx="108" cy="16" r="1.6" fill="#C9A24B" stroke="none" />
+          <circle cx="16" cy="108" r="1.6" fill="#C9A24B" stroke="none" />
+        </g>
+      </symbol>
+      <symbol id="laurel-divider" viewBox="0 0 240 28">
+        <g fill="none" stroke="#C9A24B" stroke-linecap="round">
+          <path stroke-width="1" d="M8 14 H 92" />
+          <path stroke-width="1" d="M148 14 H 232" />
+          <path stroke-width="0.8" fill="#C9A24B" fill-opacity="0.3" d="M104 14 C 110 6 118 6 120 14 C 118 22 110 22 104 14 Z" />
+          <path stroke-width="0.8" fill="#C9A24B" fill-opacity="0.3" d="M136 14 C 130 6 122 6 120 14 C 122 22 130 22 136 14 Z" />
+          <circle cx="120" cy="14" r="2.4" fill="#C9A24B" stroke="none" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#guest-name">Skip to name entry</a>
+
+  <header class="hero">
+    <p class="eyebrow">An evening of delightful suspense</p>
+    <figure class="portrait">
+      <img src="images/choco.jpg" alt="Choco" width="480" height="640" />
+    </figure>
+    <h1 id="event-title">Choco's Baby Shower</h1>
+    <p class="date" id="hero-date">3rd October</p>
+    <svg class="hero-flourish" aria-hidden="true"><use href="#laurel-divider"></use></svg>
+    <p class="prompt">Boy or Girl? Take your side.</p>
+  </header>
+
+  <section class="scoreboard" aria-label="Team scoreboard">
+    <div class="tally tally-boy">
+      <span class="tally-label">Team Boy</span>
+      <strong id="boy-count">0</strong>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar" id="team-bar" role="img" aria-label="Team balance, even">
+        <div class="bar-fill" id="bar-fill"></div>
+      </div>
+    </div>
+    <div class="tally tally-girl">
+      <span class="tally-label">Team Girl</span>
+      <strong id="girl-count">0</strong>
+    </div>
+  </section>
+
+  <main>
+    <section class="ornate-card entry-card" aria-labelledby="entry-heading">
+      <svg class="flourish flourish-tl" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+      <svg class="flourish flourish-tr" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+      <svg class="flourish flourish-bl" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+      <svg class="flourish flourish-br" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+
+      <h2 id="entry-heading" class="card-heading">Claim your ribbon</h2>
+      <p class="card-lead">Inscribe your name and press the seal.</p>
+
+      <form id="join-form" novalidate>
+        <label for="guest-name">Your name</label>
+        <input
+          id="guest-name"
+          name="guest-name"
+          type="text"
+          autocomplete="name"
+          maxlength="60"
+          placeholder="Write your name…"
+          required
+        />
+        <p id="name-error" class="error" role="alert" hidden></p>
+
+        <button type="submit" id="reveal-btn" class="wax-seal" aria-describedby="seal-hint">
+          <span class="seal-ring">
+            <span class="seal-inner">
+              <span class="monogram">C</span>
+            </span>
+          </span>
+          <span class="seal-label">Reveal My Team</span>
+        </button>
+        <p id="seal-hint" class="hint">The wax will choose your side.</p>
+      </form>
+    </section>
+
+    <div id="suspense" class="suspense" hidden aria-hidden="true">
+      <div class="wax-seal spinning" aria-hidden="true">
+        <span class="seal-ring">
+          <span class="seal-inner">
+            <span class="monogram">C</span>
+            <span class="crack"></span>
+          </span>
+        </span>
+      </div>
+      <p>The seal is breaking…</p>
+    </div>
+
+    <section id="reveal" class="ornate-card reveal-card" hidden aria-live="polite">
+      <svg class="flourish flourish-tl" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+      <svg class="flourish flourish-tr" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+      <svg class="flourish flourish-bl" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+      <svg class="flourish flourish-br" aria-hidden="true"><use href="#corner-flourish"></use></svg>
+
+      <p class="reveal-kicker">The ribbon is yours</p>
+      <h2 id="reveal-heading">
+        <span id="reveal-congrats"></span>
+        <span id="reveal-team"></span>
+      </h2>
+      <p id="dress-code" class="dress-code"></p>
+      <div class="gold-rule" aria-hidden="true"></div>
+      <p id="invite-line-1" class="invite"></p>
+      <p id="invite-line-2" class="invite"></p>
+      <p class="saved-note">Your team is saved. Refreshing will not change it.</p>
+      <div class="actions">
+        <button type="button" id="copy-btn" class="text-btn">Copy my invitation</button>
+        <button type="button" id="share-btn" class="text-btn">Share</button>
+        <button type="button" id="view-team-btn" class="text-btn" aria-expanded="false" aria-controls="teammates">
+          View people on your team
+        </button>
+      </div>
+      <div id="teammates" class="teammates" hidden>
+        <h3 id="teammates-heading">People on your team</h3>
+        <ul id="teammate-list"></ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <svg class="hero-flourish" aria-hidden="true"><use href="#laurel-divider"></use></svg>
+    <p id="footer-invite-1" class="invite"></p>
+    <p id="footer-invite-2" class="invite"></p>
+    <p class="footer-note">Wear something lovely in blue or pink, according to your team.</p>
+
+    <button type="button" id="host-toggle" class="host-link" aria-expanded="false" aria-controls="host-panel">
+      Host controls
+    </button>
+    <div id="host-panel" class="host-panel" hidden aria-hidden="true">
+      <p class="host-lead">Full register for the host. Guests only see people on their own team.</p>
+      <section class="guest-lists" aria-label="Secret guest list">
+        <div class="list-col list-boy">
+          <h3>Team Boy</h3>
+          <ul id="boy-list"></ul>
+        </div>
+        <div class="list-col list-girl">
+          <h3>Team Girl</h3>
+          <ul id="girl-list"></ul>
+        </div>
+      </section>
+      <button type="button" id="reset-all" class="text-btn danger">Reset all</button>
+      <div class="host-remove">
+        <label for="remove-name">Remove a guest</label>
+        <div class="host-remove-row">
+          <select id="remove-name"></select>
+          <button type="button" id="remove-btn" class="text-btn">Remove</button>
+        </div>
+      </div>
+      <button type="button" id="copy-list" class="text-btn">Copy full guest list</button>
+    </div>
+  </footer>
+
+  <p id="toast" class="toast" role="status" aria-live="polite" hidden></p>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+  <script src="token.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
