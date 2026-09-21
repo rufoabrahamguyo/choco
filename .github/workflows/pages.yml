@@ -2,6 +2,7 @@ name: pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
   pages: write
@@ -10,10 +11,7 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +20,25 @@ jobs:
           GUEST_WRITE_TOKEN: ${{ secrets.GUEST_WRITE_TOKEN }}
         run: |
           python3 - <<'PY'
-          import json, os
+          import json, os, sys
           token = (os.environ.get("GUEST_WRITE_TOKEN") or "").strip()
+          if not token:
+              sys.exit(
+                  "GUEST_WRITE_TOKEN is empty. Set it with: gh secret set GUEST_WRITE_TOKEN"
+              )
           with open("token.js", "w", encoding="utf-8") as handle:
               handle.write("window.CHOCO_WRITE_TOKEN = " + json.dumps(token) + ";\n")
+          print("token.js written")
           PY
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - id: deploy
         uses: actions/deploy-pages@v4

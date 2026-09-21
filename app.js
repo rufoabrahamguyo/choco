@@ -586,6 +586,15 @@ function githubContentsUrl() {
   return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 }
 
+function githubContentsReadUrl() {
+  const { branch } = CONFIG.github;
+  const params = new URLSearchParams({
+    ref: branch,
+    t: String(Date.now()),
+  });
+  return `${githubContentsUrl()}?${params.toString()}`;
+}
+
 function githubRawUrl() {
   const { owner, repo, path, branch } = CONFIG.github;
   return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}?t=${Date.now()}`;
@@ -617,7 +626,7 @@ function mergeGuests(remote, local) {
 async function fetchRemoteRecord() {
   const token = writeToken();
   if (token) {
-    const response = await fetch(`${githubContentsUrl()}?t=${Date.now()}`, {
+    const response = await fetch(githubContentsReadUrl(), {
       headers: authHeaders(),
     });
     if (response.status === 404) return { sha: "", list: [] };
