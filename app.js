@@ -207,8 +207,11 @@ function fillInviteSheet(name, team) {
   els.sheetDress.textContent = CONFIG.dress[side];
   els.inviteSheet.classList.remove("team-boy", "team-girl");
   els.inviteSheet.classList.add(side === "girl" ? "team-girl" : "team-boy");
-  els.inviteSheet.style.background = cardFill(side);
-  els.inviteSheet.style.backgroundColor = cardFill(side);
+  els.inviteSheet.style.setProperty("background", cardFill(side), "important");
+  els.inviteSheet.style.setProperty("background-color", cardFill(side), "important");
+  els.inviteSheet.style.setProperty("background-image", "none", "important");
+  els.inviteSheet.style.boxShadow = "none";
+  els.inviteSheet.style.borderColor = "transparent";
 }
 
 async function downloadInvitePdf() {
@@ -236,12 +239,40 @@ async function downloadInvitePdf() {
       onclone(clonedDoc) {
         const clone = clonedDoc.getElementById("invite-sheet");
         if (!clone) return;
+        const accent = team === "girl" ? "#d4899a" : "#6f9cc0";
+        clone.classList.remove("ornate-card");
         clone.style.left = "0";
         clone.style.top = "0";
-        clone.style.position = "absolute";
-        clone.style.background = fill;
-        clone.style.backgroundColor = fill;
-        clone.style.backgroundImage = "none";
+        clone.style.position = "relative";
+        clone.style.overflow = "hidden";
+        clone.style.boxShadow = "none";
+        clone.style.border = "none";
+        clone.style.setProperty("background", fill, "important");
+        clone.style.setProperty("background-color", fill, "important");
+        clone.style.setProperty("background-image", "none", "important");
+        const wash = clonedDoc.createElement("div");
+        wash.style.cssText = [
+          "position:absolute",
+          "inset:0",
+          `background:${fill}`,
+          "z-index:0",
+          "pointer-events:none",
+        ].join(";");
+        clone.insertBefore(wash, clone.firstChild);
+        [...clone.children].forEach((child, index) => {
+          if (index === 0) return;
+          child.style.position = child.style.position || "relative";
+          child.style.zIndex = "1";
+        });
+        clone.querySelectorAll("svg [stroke], svg [fill]").forEach((node) => {
+          const stroke = node.getAttribute("stroke");
+          const fillAttr = node.getAttribute("fill");
+          if (stroke && stroke !== "none") node.setAttribute("stroke", accent);
+          if (fillAttr && fillAttr !== "none") node.setAttribute("fill", accent);
+        });
+        clone.querySelectorAll(".gold-rule").forEach((rule) => {
+          rule.style.borderColor = accent;
+        });
       },
     });
     const image = canvas.toDataURL("image/png");
