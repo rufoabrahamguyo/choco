@@ -6,6 +6,14 @@ const CONFIG = {
   eventTitle: "Choco's Baby Shower",
   dateShort: "3rd October",
   dateFull: "Saturday, 3rd October",
+  year: 2026,
+  month: 10,
+  day: 3,
+  startTime: "11:00",
+  endTime: "14:00",
+  timeLabel: "11am",
+  timezone: "Africa/Nairobi",
+  location: "Posh Treats",
   storageKey: "choco-baby-shower-guests",
   lastRevealKey: "choco-baby-shower-last-reveal", // remembers the last person on this phone
   // Shared list so friends in different places see the same teams.
@@ -17,7 +25,7 @@ const CONFIG = {
   revealDelayMs: 2500, // suspense length (2–3 seconds)
   invitationLines: [
     "You are cordially invited to Choco's Baby Shower",
-    "Saturday, 3rd October",
+    "Saturday, 3rd October · 11am · Posh Treats",
   ],
   dress: {
     boy: "Please wear something lovely in blue.",
@@ -51,12 +59,14 @@ const els = {
   dress: document.getElementById("dress-code"),
   invite1: document.getElementById("invite-line-1"),
   invite2: document.getElementById("invite-line-2"),
-  copyBtn: document.getElementById("copy-btn"),
-  shareBtn: document.getElementById("share-btn"),
+  pdfBtn: document.getElementById("pdf-btn"),
+  gcalBtn: document.getElementById("gcal-btn"),
+  footerGcalBtn: document.getElementById("footer-gcal-btn"),
   viewTeamBtn: document.getElementById("view-team-btn"),
   teammates: document.getElementById("teammates"),
   teammatesHeading: document.getElementById("teammates-heading"),
-  teammateList: document.getElementById("teammate-list"),
+  teammateBoyList: document.getElementById("teammate-boy-list"),
+  teammateGirlList: document.getElementById("teammate-girl-list"),
   boyCount: document.getElementById("boy-count"),
   girlCount: document.getElementById("girl-count"),
   barFill: document.getElementById("bar-fill"),
@@ -75,6 +85,13 @@ const els = {
   heroDate: document.getElementById("hero-date"),
   footerInvite1: document.getElementById("footer-invite-1"),
   footerInvite2: document.getElementById("footer-invite-2"),
+  inviteSheet: document.getElementById("invite-sheet"),
+  sheetTitle: document.getElementById("sheet-title"),
+  sheetCongrats: document.getElementById("sheet-congrats"),
+  sheetTeam: document.getElementById("sheet-team"),
+  sheetDress: document.getElementById("sheet-dress"),
+  sheetInvite1: document.getElementById("sheet-invite-1"),
+  sheetInvite2: document.getElementById("sheet-invite-2"),
 };
 
 let guests = loadGuestsLocal();
@@ -95,8 +112,7 @@ window.setInterval(() => {
 }, 12000);
 
 els.form.addEventListener("submit", onReveal);
-els.copyBtn.addEventListener("click", () => copyText(lastInviteText || buildInviteText()));
-els.shareBtn.addEventListener("click", shareInvitation);
+els.pdfBtn.addEventListener("click", downloadInvitePdf);
 els.viewTeamBtn.addEventListener("click", toggleTeammates);
 els.hostToggle.addEventListener("click", toggleHost);
 els.resetAll.addEventListener("click", resetAll);
@@ -106,11 +122,15 @@ els.copyList.addEventListener("click", () => copyText(formatGuestList()));
 function applyConfigCopy() {
   document.title = `Team Boy vs Team Girl — ${CONFIG.eventTitle}`;
   els.eventTitle.textContent = CONFIG.eventTitle;
-  els.heroDate.textContent = CONFIG.dateShort;
+  els.heroDate.textContent = `${CONFIG.dateShort} · ${CONFIG.timeLabel}`;
   els.invite1.textContent = CONFIG.invitationLines[0];
   els.invite2.textContent = CONFIG.invitationLines[1];
   els.footerInvite1.textContent = CONFIG.invitationLines[0];
   els.footerInvite2.textContent = CONFIG.invitationLines[1];
+  els.sheetTitle.textContent = CONFIG.eventTitle;
+  els.sheetInvite1.textContent = CONFIG.invitationLines[0];
+  els.sheetInvite2.textContent = CONFIG.invitationLines[1];
+  updateCalendarLinks();
 }
 
 function prefersReducedMotion() {
@@ -137,6 +157,107 @@ function pickBalancedTeam(list) {
 
 function teamLabel(team) {
   return team === "boy" ? "TEAM BOY" : "TEAM GIRL";
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function calendarStamp(time) {
+  const [hour, minute] = time.split(":");
+  return `${CONFIG.year}${pad2(CONFIG.month)}${pad2(CONFIG.day)}T${hour}${minute}00`;
+}
+
+function googleCalendarUrl(name, team) {
+  const details = [
+    lastInviteText || buildInviteText(name, team),
+    "",
+    `${CONFIG.dateFull} at ${CONFIG.timeLabel}`,
+    CONFIG.location,
+  ].join("\n");
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: CONFIG.eventTitle,
+    dates: `${calendarStamp(CONFIG.startTime)}/${calendarStamp(CONFIG.endTime)}`,
+    ctz: CONFIG.timezone,
+    details,
+    location: CONFIG.location,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function updateCalendarLinks() {
+  const href = googleCalendarUrl(currentReveal?.name, currentReveal?.team);
+  if (els.gcalBtn) els.gcalBtn.href = href;
+  if (els.footerGcalBtn) els.footerGcalBtn.href = href;
+}
+
+function cardFill(team) {
+  return team === "girl" ? "#f4c4d0" : "#b7d3ea";
+}
+
+function fillInviteSheet(name, team) {
+  const guestName = name || currentReveal?.name || "guest";
+  const side = team || currentReveal?.team || "boy";
+  els.sheetCongrats.textContent = `Congratulations, ${guestName}`;
+  els.sheetTeam.textContent = `you are ${teamLabel(side)}!`;
+  els.sheetDress.textContent = CONFIG.dress[side];
+  els.inviteSheet.classList.remove("team-boy", "team-girl");
+  els.inviteSheet.classList.add(side === "girl" ? "team-girl" : "team-boy");
+  els.inviteSheet.style.background = cardFill(side);
+  els.inviteSheet.style.backgroundColor = cardFill(side);
+}
+
+async function downloadInvitePdf() {
+  if (!window.html2canvas || !window.jspdf) {
+    showToast("The invitation card could not be prepared just now.");
+    return;
+  }
+
+  const name = currentReveal?.name;
+  const team = currentReveal?.team === "girl" ? "girl" : "boy";
+  fillInviteSheet(name, team);
+  els.pdfBtn.disabled = true;
+  showToast("Preparing your invitation card…");
+
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+    const fill = cardFill(team);
+    const canvas = await window.html2canvas(els.inviteSheet, {
+      scale: 2,
+      backgroundColor: fill,
+      useCORS: true,
+      logging: false,
+      onclone(clonedDoc) {
+        const clone = clonedDoc.getElementById("invite-sheet");
+        if (!clone) return;
+        clone.style.left = "0";
+        clone.style.top = "0";
+        clone.style.position = "absolute";
+        clone.style.background = fill;
+        clone.style.backgroundColor = fill;
+        clone.style.backgroundImage = "none";
+      },
+    });
+    const image = canvas.toDataURL("image/png");
+    const pageWidth = 420;
+    const pageHeight = pageWidth * (canvas.height / canvas.width);
+    const pdf = new window.jspdf.jsPDF({
+      orientation: pageHeight > pageWidth ? "portrait" : "landscape",
+      unit: "pt",
+      format: [pageWidth, pageHeight],
+    });
+    pdf.addImage(image, "PNG", 0, 0, pageWidth, pageHeight);
+    pdf.save("choco-baby-shower-invite.pdf");
+    showToast("Invitation card saved as PDF.");
+  } catch {
+    showToast("Unable to create the invitation card just now.");
+  } finally {
+    els.pdfBtn.disabled = false;
+  }
 }
 
 function buildInviteText(name, team) {
@@ -183,6 +304,7 @@ async function onReveal(event) {
   els.name.value = displayName;
   lastInviteText = buildInviteText(displayName, team);
   saveLastReveal(currentReveal);
+  updateCalendarLinks();
   await playReveal(displayName, team);
 }
 
@@ -205,6 +327,7 @@ async function playReveal(name, team, options = {}) {
   els.congrats.textContent = `Congratulations, ${name}`;
   els.teamLine.textContent = `you are ${teamLabel(team)}!`;
   els.dress.textContent = CONFIG.dress[team];
+  fillInviteSheet(name, team);
   els.reveal.classList.add(team === "boy" ? "team-boy" : "team-girl");
   els.reveal.hidden = false;
   els.reveal.classList.add("unfold");
@@ -230,6 +353,7 @@ function restoreLastReveal() {
   currentReveal = { name, team };
   els.name.value = name;
   lastInviteText = buildInviteText(name, team);
+  updateCalendarLinks();
   playReveal(name, team, { skipSuspense: true, skipConfetti: true });
 }
 
@@ -303,35 +427,17 @@ function toggleTeammates() {
   const open = els.teammates.hidden;
   els.teammates.hidden = !open;
   els.viewTeamBtn.setAttribute("aria-expanded", String(open));
-  els.viewTeamBtn.textContent = open ? "Hide people on your team" : "View people on your team";
+  els.viewTeamBtn.textContent = open ? "Hide everyone" : "View everyone";
   renderTeammates();
 }
 
 function renderTeammates() {
-  if (!els.teammateList) return;
-  const team = currentReveal && currentReveal.team;
-  const people = team ? guests.filter((guest) => guest.team === team) : [];
-  els.teammatesHeading.textContent =
-    team === "girl" ? "People on Team Girl" : team === "boy" ? "People on Team Boy" : "People on your team";
-  els.teammateList.replaceChildren();
-
-  if (!team) {
-    const empty = document.createElement("p");
-    empty.className = "empty-list";
-    empty.textContent = "Reveal your team to see your people.";
-    els.teammateList.append(empty);
-    return;
-  }
-
-  if (!people.length) {
-    const empty = document.createElement("p");
-    empty.className = "empty-list";
-    empty.textContent = "You are the first on this side. Friends will appear as they join.";
-    els.teammateList.append(empty);
-    return;
-  }
-
-  renderList(els.teammateList, people);
+  if (!els.teammateBoyList || !els.teammateGirlList) return;
+  const boy = guests.filter((guest) => guest.team === "boy");
+  const girl = guests.filter((guest) => guest.team === "girl");
+  els.teammatesHeading.textContent = "Everyone who has joined";
+  renderList(els.teammateBoyList, boy);
+  renderList(els.teammateGirlList, girl);
 }
 
 function toggleHost() {
@@ -386,19 +492,6 @@ function formatGuestList() {
     ...(girl.length ? girl.map((guest) => `• ${guest.name}`) : ["• —"]),
   ];
   return lines.join("\n");
-}
-
-async function shareInvitation() {
-  const text = lastInviteText || buildInviteText();
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: CONFIG.eventTitle, text });
-      return;
-    } catch (error) {
-      if (error && error.name === "AbortError") return;
-    }
-  }
-  await copyText(text);
 }
 
 async function copyText(text) {

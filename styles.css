@@ -179,6 +179,59 @@ h1 {
   text-align: center;
 }
 
+.invite-sheet {
+  position: fixed;
+  left: -12000px;
+  top: 0;
+  z-index: -1;
+  width: 720px;
+  margin: 0;
+  padding: 3.2rem 3rem 2.6rem;
+  pointer-events: none;
+  background-image: none;
+  box-shadow:
+    var(--shadow),
+    inset 0 0 0 1px rgba(201, 162, 75, 0.45),
+    inset 0 0 0 7px rgba(201, 162, 75, 0.22);
+}
+
+.invite-sheet .portrait {
+  width: 168px;
+}
+
+.invite-sheet h1 {
+  font-size: 2.7rem;
+}
+
+.invite-kicker {
+  margin: 0.15rem 0 0.85rem;
+  color: var(--gold-deep);
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 1.15rem;
+}
+
+.sheet-heading {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.2rem 0 0.7rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.85rem;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.invite-sheet.team-boy {
+  background: #b7d3ea;
+  background-color: #b7d3ea;
+}
+
+.invite-sheet.team-girl {
+  background: #f4c4d0;
+  background-color: #f4c4d0;
+}
+
 .entry-card {
   animation: fade-rise 0.9s ease 0.12s both;
 }
@@ -411,6 +464,7 @@ label {
 
 .text-btn,
 .host-link {
+  display: inline-block;
   padding: 0.55rem 0.95rem;
   border: 1px solid var(--gold);
   background: transparent;
@@ -418,6 +472,8 @@ label {
   font-family: var(--display);
   font-size: 1rem;
   letter-spacing: 0.06em;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -577,6 +633,10 @@ label {
   margin-bottom: 0.35rem;
 }
 
+.footer-actions {
+  margin: 1rem 0 0;
+}
+
 .host-link {
   display: inline-block;
   margin-top: 1.4rem;
@@ -728,5 +788,38 @@ label {
 
   .wax-seal:hover .seal-ring {
     transform: none;
+  }
+}
+
+@media print {
+  .damask,
+  .skip-link,
+  .hero,
+  .scoreboard,
+  .entry-card,
+  .suspense,
+  .footer,
+  .toast,
+  #confetti,
+  .invite-sheet,
+  .actions,
+  .teammates,
+  .saved-note {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  main {
+    width: 100%;
+    margin: 0;
+  }
+
+  #reveal {
+    display: block !important;
+    box-shadow: none;
+    break-inside: avoid;
   }
 }
