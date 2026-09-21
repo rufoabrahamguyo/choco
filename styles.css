@@ -448,12 +448,6 @@ label {
   line-height: 1.55;
 }
 
-.saved-note {
-  margin: 0.85rem 0 0;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -803,8 +797,7 @@ label {
   #confetti,
   .invite-sheet,
   .actions,
-  .teammates,
-  .saved-note {
+  .teammates {
     display: none !important;
   }
 

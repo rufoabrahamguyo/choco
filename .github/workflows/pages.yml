@@ -17,6 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inject guest list write key
+        env:
+          GUEST_WRITE_TOKEN: ${{ secrets.GUEST_WRITE_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          token = (os.environ.get("GUEST_WRITE_TOKEN") or "").strip()
+          with open("token.js", "w", encoding="utf-8") as handle:
+              handle.write("window.CHOCO_WRITE_TOKEN = " + json.dumps(token) + ";\n")
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

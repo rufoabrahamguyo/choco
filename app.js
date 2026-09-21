@@ -1,5 +1,5 @@
 // ============================================================
-// EASY EDITS — change the name, date, wording, or colours here
+// EASY EDITS - change the name, date, wording, or colours here
 // ============================================================
 const CONFIG = {
   honoree: "Choco", // used for the monogram if you change it in HTML
@@ -19,8 +19,9 @@ const CONFIG = {
   // Shared list so friends in different places see the same teams.
   github: {
     owner: "rufoabrahamguyo",
-    repo: "choco-babyshower",
+    repo: "choco",
     path: "data/guests.json",
+    branch: "guest-data",
   },
   revealDelayMs: 2500, // suspense length (2–3 seconds)
   invitationLines: [
@@ -100,6 +101,7 @@ let toastTimer = 0;
 let lastInviteText = "";
 let currentReveal = loadLastReveal();
 let remoteSha = "";
+let remoteWriteSucceeded = false;
 
 applyConfigCopy();
 render();
@@ -120,7 +122,7 @@ els.removeBtn.addEventListener("click", removeSelectedGuest);
 els.copyList.addEventListener("click", () => copyText(formatGuestList()));
 
 function applyConfigCopy() {
-  document.title = `Team Boy vs Team Girl — ${CONFIG.eventTitle}`;
+  document.title = `Team Boy vs Team Girl: ${CONFIG.eventTitle}`;
   els.eventTitle.textContent = CONFIG.eventTitle;
   els.heroDate.textContent = `${CONFIG.dateShort} · ${CONFIG.timeLabel}`;
   els.invite1.textContent = CONFIG.invitationLines[0];
@@ -264,7 +266,7 @@ function buildInviteText(name, team) {
   const guestName = name || els.name.value || "guest";
   const side = team || (findGuest(normalizeName(guestName)) || {}).team || "boy";
   return [
-    `Congratulations, ${guestName} — you are ${teamLabel(side)}!`,
+    `Congratulations, ${guestName}, you are ${teamLabel(side)}!`,
     "",
     CONFIG.dress[side],
     "",
@@ -296,8 +298,11 @@ async function onReveal(event) {
 
   if (!existing) {
     guests = [...guests, { name: displayName, team }];
-    persistGuests(guests);
+    const saved = await persistGuests(guests);
     render();
+    if (!saved) {
+      showToast("Saved on this phone only. Friends may not see this name yet.");
+    }
   }
 
   currentReveal = { name: displayName, team };
@@ -415,7 +420,7 @@ function renderHostSelect() {
   guests.forEach((guest, index) => {
     const option = document.createElement("option");
     option.value = String(index);
-    option.textContent = `${guest.name} — ${teamLabel(guest.team)}`;
+    option.textContent = `${guest.name} (${teamLabel(guest.team)})`;
     els.removeName.append(option);
   });
   if (current && [...els.removeName.options].some((opt) => opt.value === current)) {
@@ -447,12 +452,12 @@ function toggleHost() {
   els.hostToggle.setAttribute("aria-expanded", String(open));
 }
 
-function resetAll() {
+async function resetAll() {
   const confirmed = window.confirm("This will clear every guest. Continue?");
   if (!confirmed) return;
   guests = [];
   currentReveal = null;
-  persistGuests(guests);
+  await persistGuests(guests, { replace: true });
   clearLastReveal();
   els.reveal.hidden = true;
   els.teammates.hidden = true;
@@ -461,12 +466,12 @@ function resetAll() {
   showToast("The register is cleared.");
 }
 
-function removeSelectedGuest() {
+async function removeSelectedGuest() {
   const index = Number(els.removeName.value);
   if (!Number.isInteger(index) || !guests[index]) return;
   const removed = guests[index];
   guests = guests.filter((_, i) => i !== index);
-  persistGuests(guests);
+  await persistGuests(guests, { replace: true });
   const saved = loadLastReveal();
   if (saved && saved.name.toLowerCase() === removed.name.toLowerCase()) {
     clearLastReveal();
@@ -483,13 +488,13 @@ function formatGuestList() {
   const boy = guests.filter((guest) => guest.team === "boy");
   const girl = guests.filter((guest) => guest.team === "girl");
   const lines = [
-    `${CONFIG.eventTitle} — Guest list`,
+    `${CONFIG.eventTitle}: Guest list`,
     "",
     `TEAM BOY (${boy.length})`,
-    ...(boy.length ? boy.map((guest) => `• ${guest.name}`) : ["• —"]),
+    ...(boy.length ? boy.map((guest) => `• ${guest.name}`) : ["• none"]),
     "",
     `TEAM GIRL (${girl.length})`,
-    ...(girl.length ? girl.map((guest) => `• ${guest.name}`) : ["• —"]),
+    ...(girl.length ? girl.map((guest) => `• ${guest.name}`) : ["• none"]),
   ];
   return lines.join("\n");
 }
@@ -571,9 +576,9 @@ function saveGuestsLocal(list) {
   }
 }
 
-function persistGuests(list) {
+async function persistGuests(list, options = {}) {
   saveGuestsLocal(list);
-  saveGuestsRemote(list);
+  return saveGuestsRemote(list, options);
 }
 
 function githubContentsUrl() {
@@ -581,20 +586,62 @@ function githubContentsUrl() {
   return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 }
 
+function githubRawUrl() {
+  const { owner, repo, path, branch } = CONFIG.github;
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}?t=${Date.now()}`;
+}
+
 function writeToken() {
   return (typeof window !== "undefined" && window.CHOCO_WRITE_TOKEN) || "";
 }
 
-async function refreshFromRemote() {
-  try {
+function authHeaders() {
+  const headers = { Accept: "application/vnd.github+json" };
+  const token = writeToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+function mergeGuests(remote, local) {
+  const byName = new Map();
+  for (const guest of remote) {
+    byName.set(guest.name.toLowerCase(), guest);
+  }
+  for (const guest of local) {
+    const key = guest.name.toLowerCase();
+    if (!byName.has(key)) byName.set(key, guest);
+  }
+  return [...byName.values()];
+}
+
+async function fetchRemoteRecord() {
+  const token = writeToken();
+  if (token) {
     const response = await fetch(`${githubContentsUrl()}?t=${Date.now()}`, {
-      headers: { Accept: "application/vnd.github+json" },
+      headers: authHeaders(),
     });
-    if (!response.ok) return;
+    if (response.status === 404) return { sha: "", list: [] };
+    if (!response.ok) return null;
     const payload = await response.json();
     remoteSha = payload.sha || "";
     const decoded = decodeBase64(payload.content || "");
-    const list = sanitizeGuests(JSON.parse(decoded));
+    return { sha: remoteSha, list: sanitizeGuests(JSON.parse(decoded || "[]")) };
+  }
+
+  const response = await fetch(githubRawUrl(), { cache: "no-store" });
+  if (response.status === 404) return { sha: "", list: [] };
+  if (!response.ok) return null;
+  const list = sanitizeGuests(await response.json());
+  return { sha: "", list };
+}
+
+async function refreshFromRemote() {
+  try {
+    const record = await fetchRemoteRecord();
+    if (!record) return;
+    const list = remoteWriteSucceeded
+      ? record.list
+      : mergeGuests(record.list, guests);
     guests = list;
     saveGuestsLocal(list);
     render();
@@ -603,31 +650,41 @@ async function refreshFromRemote() {
   }
 }
 
-async function saveGuestsRemote(list) {
+async function saveGuestsRemote(list, options = {}) {
   const token = writeToken();
-  if (!token) return;
-  try {
-    if (!remoteSha) await refreshFromRemote();
-    const body = {
-      message: "Update guest list",
-      content: encodeBase64(JSON.stringify(list, null, 2)),
-      sha: remoteSha || undefined,
-    };
-    const response = await fetch(githubContentsUrl(), {
-      method: "PUT",
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) return;
-    const payload = await response.json();
-    remoteSha = (payload.content && payload.content.sha) || remoteSha;
-  } catch {
-    // The name is still saved on this phone.
+  if (!token) return false;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const record = await fetchRemoteRecord();
+      if (!record) return false;
+      const next = options.replace ? list : mergeGuests(record.list, list);
+      const response = await fetch(githubContentsUrl(), {
+        method: "PUT",
+        headers: {
+          ...authHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "Update guest list",
+          content: encodeBase64(`${JSON.stringify(next, null, 2)}\n`),
+          branch: CONFIG.github.branch,
+          sha: record.sha || undefined,
+        }),
+      });
+      if (response.status === 409) continue;
+      if (!response.ok) return false;
+      const payload = await response.json();
+      remoteSha = (payload.content && payload.content.sha) || remoteSha;
+      remoteWriteSucceeded = true;
+      guests = next;
+      saveGuestsLocal(next);
+      return true;
+    } catch {
+      return false;
+    }
   }
+  return false;
 }
 
 function encodeBase64(text) {
