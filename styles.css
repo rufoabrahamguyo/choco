@@ -205,6 +205,25 @@ h1 {
   margin-right: auto;
 }
 
+.invite-sheet .flourish {
+  width: 76px;
+  height: 76px;
+  z-index: 1;
+}
+
+.invite-sheet .flourish-tl { top: 14px; left: 14px; }
+.invite-sheet .flourish-tr { top: 14px; right: 14px; }
+.invite-sheet .flourish-bl { bottom: 14px; left: 14px; }
+.invite-sheet .flourish-br { bottom: 14px; right: 14px; }
+
+.invite-sheet .eyebrow {
+  position: relative;
+  z-index: 2;
+  max-width: 22rem;
+  padding: 0 0.4rem;
+  letter-spacing: 0.32em;
+}
+
 .invite-sheet h1,
 .invite-sheet .invite-kicker,
 .invite-sheet .sheet-heading,

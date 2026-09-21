@@ -259,13 +259,17 @@ async function downloadInvitePdf() {
         clone.insertBefore(wash, clone.firstChild);
         [...clone.children].forEach((child, index) => {
           if (index === 0) return;
-          child.style.position = child.style.position || "relative";
-          child.style.zIndex = "1";
+          if (child.classList.contains("flourish")) {
+            child.style.position = "absolute";
+            child.style.zIndex = "1";
+            return;
+          }
+          child.style.position = "relative";
+          child.style.zIndex = "2";
           if (child.tagName !== "SVG" && child.tagName !== "FIGURE") {
             child.style.textAlign = "center";
             child.style.marginLeft = "auto";
             child.style.marginRight = "auto";
-            child.style.width = "100%";
           }
         });
       },
