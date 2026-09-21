@@ -101,7 +101,6 @@ let toastTimer = 0;
 let lastInviteText = "";
 let currentReveal = loadLastReveal();
 let remoteSha = "";
-let remoteWriteSucceeded = false;
 
 applyConfigCopy();
 render();
@@ -381,15 +380,30 @@ function restoreLastReveal() {
   if (!saved) return;
 
   const current = findGuest(saved.name);
-  const name = current ? current.name : saved.name;
-  const team = current ? current.team : saved.team;
-  if (team !== "boy" && team !== "girl") return;
+  if (!current) {
+    clearRevealState();
+    return;
+  }
 
-  currentReveal = { name, team };
-  els.name.value = name;
-  lastInviteText = buildInviteText(name, team);
+  currentReveal = { name: current.name, team: current.team };
+  els.name.value = current.name;
+  lastInviteText = buildInviteText(current.name, current.team);
   updateCalendarLinks();
-  playReveal(name, team, { skipSuspense: true, skipConfetti: true });
+  playReveal(current.name, current.team, { skipSuspense: true, skipConfetti: true });
+}
+
+function clearRevealState() {
+  clearLastReveal();
+  currentReveal = null;
+  lastInviteText = "";
+  if (els.reveal) els.reveal.hidden = true;
+  if (els.teammates) {
+    els.teammates.hidden = true;
+    if (els.viewTeamBtn) {
+      els.viewTeamBtn.setAttribute("aria-expanded", "false");
+      els.viewTeamBtn.textContent = "View everyone";
+    }
+  }
 }
 
 function render() {
@@ -486,12 +500,8 @@ async function resetAll() {
   const confirmed = window.confirm("This will clear every guest. Continue?");
   if (!confirmed) return;
   guests = [];
-  currentReveal = null;
   await persistGuests(guests, { replace: true });
-  clearLastReveal();
-  els.reveal.hidden = true;
-  els.teammates.hidden = true;
-  lastInviteText = "";
+  clearRevealState();
   render();
   showToast("The register is cleared.");
 }
@@ -678,12 +688,12 @@ async function refreshFromRemote() {
   try {
     const record = await fetchRemoteRecord();
     if (!record) return;
-    const list = remoteWriteSucceeded
-      ? record.list
-      : mergeGuests(record.list, guests);
-    guests = list;
-    saveGuestsLocal(list);
+    guests = record.list;
+    saveGuestsLocal(record.list);
     render();
+    if (currentReveal && !findGuest(currentReveal.name)) {
+      restoreLastReveal();
+    }
   } catch {
     // Stay on the locally saved list if the shared file cannot be reached.
   }
@@ -715,7 +725,6 @@ async function saveGuestsRemote(list, options = {}) {
       if (!response.ok) return false;
       const payload = await response.json();
       remoteSha = (payload.content && payload.content.sha) || remoteSha;
-      remoteWriteSucceeded = true;
       guests = next;
       saveGuestsLocal(next);
       return true;
