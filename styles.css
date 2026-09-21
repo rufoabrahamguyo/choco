@@ -189,22 +189,48 @@ h1 {
   padding: 3.2rem 3rem 2.6rem;
   overflow: hidden;
   pointer-events: none;
+  text-align: center;
   background-image: none;
   box-shadow: none;
 }
 
 .invite-sheet.ornate-card {
   background-image: none;
-  border-color: transparent;
   box-shadow: none;
 }
 
 .invite-sheet .portrait {
   width: 168px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.invite-sheet h1,
+.invite-sheet .invite-kicker,
+.invite-sheet .sheet-heading,
+.invite-sheet .dress-code,
+.invite-sheet .invite,
+.invite-sheet .eyebrow {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
 }
 
 .invite-sheet h1 {
   font-size: 2.7rem;
+}
+
+.invite-sheet .sheet-heading {
+  display: grid;
+  justify-items: center;
+  justify-content: center;
+}
+
+.invite-sheet .gold-rule {
+  margin-left: auto;
+  margin-right: auto;
+  border-color: var(--gold);
 }
 
 .invite-kicker {
@@ -238,14 +264,6 @@ h1 {
   background: #f4c4d0 !important;
   background-color: #f4c4d0 !important;
   background-image: none !important;
-}
-
-.invite-sheet.team-boy .gold-rule {
-  border-color: #8eb4d4;
-}
-
-.invite-sheet.team-girl .gold-rule {
-  border-color: #e8a9b8;
 }
 
 .entry-card {

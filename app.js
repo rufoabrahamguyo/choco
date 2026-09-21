@@ -211,7 +211,7 @@ function fillInviteSheet(name, team) {
   els.inviteSheet.style.setProperty("background-color", cardFill(side), "important");
   els.inviteSheet.style.setProperty("background-image", "none", "important");
   els.inviteSheet.style.boxShadow = "none";
-  els.inviteSheet.style.borderColor = "transparent";
+  els.inviteSheet.style.textAlign = "center";
 }
 
 async function downloadInvitePdf() {
@@ -239,14 +239,12 @@ async function downloadInvitePdf() {
       onclone(clonedDoc) {
         const clone = clonedDoc.getElementById("invite-sheet");
         if (!clone) return;
-        const accent = team === "girl" ? "#d4899a" : "#6f9cc0";
-        clone.classList.remove("ornate-card");
         clone.style.left = "0";
         clone.style.top = "0";
         clone.style.position = "relative";
         clone.style.overflow = "hidden";
         clone.style.boxShadow = "none";
-        clone.style.border = "none";
+        clone.style.textAlign = "center";
         clone.style.setProperty("background", fill, "important");
         clone.style.setProperty("background-color", fill, "important");
         clone.style.setProperty("background-image", "none", "important");
@@ -263,15 +261,12 @@ async function downloadInvitePdf() {
           if (index === 0) return;
           child.style.position = child.style.position || "relative";
           child.style.zIndex = "1";
-        });
-        clone.querySelectorAll("svg [stroke], svg [fill]").forEach((node) => {
-          const stroke = node.getAttribute("stroke");
-          const fillAttr = node.getAttribute("fill");
-          if (stroke && stroke !== "none") node.setAttribute("stroke", accent);
-          if (fillAttr && fillAttr !== "none") node.setAttribute("fill", accent);
-        });
-        clone.querySelectorAll(".gold-rule").forEach((rule) => {
-          rule.style.borderColor = accent;
+          if (child.tagName !== "SVG" && child.tagName !== "FIGURE") {
+            child.style.textAlign = "center";
+            child.style.marginLeft = "auto";
+            child.style.marginRight = "auto";
+            child.style.width = "100%";
+          }
         });
       },
     });
