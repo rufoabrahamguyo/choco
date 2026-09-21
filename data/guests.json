@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "name": "Rufo Guyo",
+    "team": "girl"
+  },
+  {
+    "name": "G",
+    "team": "girl"
+  },
+  {
+    "name": "Rufo",
+    "team": "boy"
+  },
+  {
+    "name": "Test",
+    "team": "boy"
+  }
+]
